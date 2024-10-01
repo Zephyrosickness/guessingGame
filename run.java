@@ -10,51 +10,53 @@ public class run {
         Scanner scan = new Scanner(System.in);
         ArrayList<Integer> failedGuesses = new ArrayList<Integer>();
         boolean forceExit = false; // if true, game will not roll nums or ask for new ones
-        int guessCount = 1; //AI guess count
+        int guessCount = 1; //CPU guess count
+        final int MIN_VALUE = 1;
+        final int MAX_VALUE = 100;
 
 
         //input/output initial setup
-        System.out.println("Hello there. How high would you like me to guess up to?.");
-        int bound = scan.nextInt();
+        String message = "Hello there. How high would you like me to guess up to?.";
+        int bound = validityCheck(MIN_VALUE, MAX_VALUE,message);
 
-        System.out.println("How many guesses would you like for me to have until I give up? [Type 0 for infinite]");
-        int guessLimit = scan.nextInt();
+        message = "How many guesses would you like for me to have until I give up? [Type 0 for infinite]";
+        int guessLimit = validityCheck(0,MAX_VALUE, message);
         if(guessLimit<=0){
-            guessLimit = 5000; //idc enough to do this the "proper" way rn
+            guessLimit = 5000; //idc enough to do this the "proper" way rn | 10/1 EDIT: wtf is the "proper way???"
         }
 
-        System.out.println("Type a number between 1-"+bound+" for me to guess.");
-        int target = scan.nextInt();
+        message = "Type a number between 1-"+bound+" for me to guess.";
+        int target = validityCheck(MIN_VALUE, bound, message);
 
-        //error handler for if target is out of bounds
-        while(target>bound||target<1&&!scan.hasNextInt()){
-            System.out.println("Invalid output. Try again!");
-            target = scan.nextInt();
-        }
 
-        bound++; //bound must be increased by 1 or else AI will never guess the bound, so you could set bound to 10 and set ur target num to 10 and never lose
+        bound++; //bound must be increased by 1 or else CPU will never guess the bound, so you could set bound to 10 and set ur target num to 10 and never lose
 
         int guess = rand.nextInt(bound);
-        int previousGuess; //this var exists bc AI needs to have a previous guess to compare itself to; there's def a better way to do this but IDk
+        int previousGuess; //this var exists bc CPU needs to have a previous guess to compare itself to; there's def a better way to do this but IDk
 
-        //begin AI's output
-        System.out.println("Hmmm... I guess "+guess+". Was I correct?");
-        System.out.println("Type + for a higher guess, - for lower, ! for a correct guess.");
-        String input = scan.next();
+        //begin CPU's output
+        System.out.println("Hmmm... I guess "+guess+". Was I correct?\nType + for a higher guess, - for lower, ! for a correct guess.");
+        String input = scan.next(); //i could proly turn this into a do/while and get rid of these 2 lines bnut uhhh im tired
 
         //gameplay loop
 
-        while(!forceExit&&guessCount<guessLimit){
-            guessCount++;
+        do{
+            if(guess!=target){
+                failedGuesses.add(guess);
+            }
             int guessLocal = 0;
             previousGuess = guess;
             //cpu will not guess already guessed nums
-            if(previousGuess!=target){
-                failedGuesses.add(previousGuess);
-            }
 
             //cpu guesses higher
             if(input.equals("+")) {
+
+                if(guess==target){ //if cpu guesses correct and player doesn't input '!'
+                    System.out.println("Hey wait, wasn't "+target+"the number you wanted me to guess? Looks like I win!");
+                    forceExit = true;
+                    break;
+                }
+
                 while ((guess < previousGuess || failedGuesses.contains(guess)) && !forceExit) {
                     guess = rand.nextInt(bound);
                     guessLocal++;
@@ -67,7 +69,15 @@ public class run {
                         }
                     }
                 }
-            }else if(input.equals("-")) { //cpu guesses lower
+
+            }else if(input.equals("-")) {//cpu guesses lower
+
+                if(guess==target){ //if cpu guesses correct and player doesn't input '!'
+                    System.out.println("Hey wait, wasn't "+target+"the number you wanted me to guess? Looks like I win!");
+                    forceExit = true;
+                    break;
+                }
+
                 while ((guess > previousGuess || failedGuesses.contains(guess)) && !forceExit) {
                     guess = rand.nextInt(bound);
                     guessLocal++;
@@ -80,7 +90,9 @@ public class run {
                         }
                     }
                 }
+
             }else if(input.equals("!")) { //correct guess
+
                     if (target == guess) {
                         System.out.println("I got it right! Thanks for playing!");
                         forceExit = true;
@@ -94,12 +106,18 @@ public class run {
                             guess = rand.nextInt(bound);
                         }
                     }
+
+            }else{
+                System.out.println("Invalid input. Try again.");
             }
 
+            guessCount++;
             //cpu output
             System.out.println("Hmmm... I guess "+guess+". Was I correct?");
             input = scan.next();
-        }
+
+        }while(!forceExit&&guessCount<guessLimit);
+
         if(guessCount>=guessLimit){
             System.out.println("Looks like you won! I ran out of guesses.");
         }
@@ -110,5 +128,30 @@ public class run {
         if(replayInput=='Y'){
             runGame();
         }
+    }
+    //validity check for all values
+    public static int validityCheck(final int MIN_BOUNDS, final int MAX_BOUNDS, String MESSAGE){
+        //init var
+        Scanner scan = new Scanner(System.in);
+        boolean intValidity = false; //is input valid? (if in range and an int, true)
+        int input = 0;
+
+        System.out.println(MESSAGE);
+
+        do {
+            if(scan.hasNextInt()){ //check if input has correct datatype
+                input = scan.nextInt();
+                
+                if(input >= MIN_BOUNDS && input <= MAX_BOUNDS) { //check if input falls within range
+                    intValidity = true; //exits doWhile
+                    
+                }else{ System.out.println("Your input doesn't fall within the range. Try Again. [Minimum: "+MIN_BOUNDS+ "Maximum: "+MAX_BOUNDS+"]"); } //if input is correct type but isn't in range
+            
+            }else{ System.out.println("You've entered an invalid datatype. Try again."); } //if datatype is wrong
+            
+            scan.nextLine(); //clears cache; if this wasnt here, inputs would be quirked up
+        } while (!intValidity);
+        
+        return input;
     }
 }
